@@ -3,18 +3,47 @@ import { makeStyles, withStyles } from "@material-ui/core/styles";
 import AppBar from "@material-ui/core/AppBar";
 import Toolbar from "@material-ui/core/Toolbar";
 import Typography from "@material-ui/core/Typography";
-import Avatar from "@material-ui/core/Avatar";
+// import Avatar from "@material-ui/core/Avatar";
 import Container from "@material-ui/core/Container";
 import React from "react";
 import Card from "@material-ui/core/Card";
 import CardContent from "@material-ui/core/CardContent";
 import { Paper, CardActionArea, CardMedia, Grid, TableContainer, Table, TableBody, TableHead, TableRow, TableCell, Button, CircularProgress } from "@material-ui/core";
-import cblogo from "./cblogo.PNG";
-import image from "./bg.png";
+import plogo from "./plogo.png";
+import image from "./bg1.png";
 import { DropzoneArea } from 'material-ui-dropzone';
 import { common } from '@material-ui/core/colors';
 import Clear from '@material-ui/icons/Clear';
 
+
+
+// 💡 Disease Suggestions Object
+const diseaseSuggestions = {
+  early_blight: {
+    message: `⚠️ Detected: Early Blight
+
+Suggested Action:
+- Apply fungicides like Mancozeb or Chlorothalonil.
+- Remove affected leaves.
+- Avoid overhead watering.
+- Rotate crops annually.`,
+    link: "https://www.planetnatural.com/pest-problem-solver/plant-disease/early-blight/"
+  },
+  late_blight: {
+    message: `⚠️ Detected: Late Blight
+
+Suggested Action:
+- Use fungicides like copper-based sprays.
+- Remove and destroy infected plants.
+- Avoid high humidity conditions.
+- Space plants for air flow.`,
+    link: "https://extension.umn.edu/diseases/late-blight"
+  },
+  healthy: {
+    message: `✅ Your potato plant looks healthy! Keep up the good care!`,
+    link: null
+  }
+};
 
 
 
@@ -135,7 +164,7 @@ const useStyles = makeStyles((theme) => ({
     alignItems: 'center',
   },
   appbar: {
-    background: '#be6a77',
+    background: ' #556B2F',
     boxShadow: 'none',
     color: 'white'
   },
@@ -156,17 +185,20 @@ export const ImageUpload = () => {
     if (image) {
       let formData = new FormData();
       formData.append("file", selectedFile);
+      console.log("Sending to backend:", process.env.REACT_APP_API_URL);
       let res = await axios({
         method: "post",
         url: process.env.REACT_APP_API_URL,
         data: formData,
       });
       if (res.status === 200) {
+        console.log("Backend Response:", res.data); 
         setData(res.data);
       }
       setIsloading(false);
     }
   }
+  
 
   const clearData = () => {
     setData(null);
@@ -211,14 +243,17 @@ export const ImageUpload = () => {
   return (
     <React.Fragment>
       <AppBar position="static" className={classes.appbar}>
-        <Toolbar>
-          <Typography className={classes.title} variant="h6" noWrap>
-            CodeBasics: Potato Disease Classification
-          </Typography>
-          <div className={classes.grow} />
-          <Avatar src={cblogo}></Avatar>
-        </Toolbar>
-      </AppBar>
+      <Toolbar sx={{ justifyContent: 'center' }}>
+        <img
+          src={plogo}
+          alt="Potato Logo"
+          style={{ width: 70, height: 50, marginRight: 10 }}
+        />
+        <Typography className={classes.title} variant="h6" noWrap>
+          Potato Disease Classification
+        </Typography>
+      </Toolbar>
+    </AppBar>
       <Container maxWidth={false} className={classes.mainContainer} disableGutters={true}>
         <Grid
           className={classes.gridContainer}
@@ -228,52 +263,127 @@ export const ImageUpload = () => {
           alignItems="center"
           spacing={2}
         >
-          <Grid item xs={12}>
+         
+
+          {/* hello */}
+           {/* 🖼️ Image / Dropzone / Prediction Table */}
+          <Grid item xs={12} md={8}>
             <Card className={`${classes.imageCard} ${!image ? classes.imageCardEmpty : ''}`}>
-              {image && <CardActionArea>
-                <CardMedia
-                  className={classes.media}
-                  image={preview}
-                  component="image"
-                  title="Contemplative Reptile"
-                />
-              </CardActionArea>
-              }
-              {!image && <CardContent className={classes.content}>
-                <DropzoneArea
-                  acceptedFiles={['image/*']}
-                  dropzoneText={"Drag and drop an image of a potato plant leaf to process"}
-                  onChange={onSelectFile}
-                />
-              </CardContent>}
-              {data && <CardContent className={classes.detail}>
-                <TableContainer component={Paper} className={classes.tableContainer}>
-                  <Table className={classes.table} size="small" aria-label="simple table">
-                    <TableHead className={classes.tableHead}>
-                      <TableRow className={classes.tableRow}>
-                        <TableCell className={classes.tableCell1}>Label:</TableCell>
-                        <TableCell align="right" className={classes.tableCell1}>Confidence:</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody className={classes.tableBody}>
-                      <TableRow className={classes.tableRow}>
-                        <TableCell component="th" scope="row" className={classes.tableCell}>
-                          {data.class}
-                        </TableCell>
-                        <TableCell align="right" className={classes.tableCell}>{confidence}%</TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </CardContent>}
-              {isLoading && <CardContent className={classes.detail}>
-                <CircularProgress color="secondary" className={classes.loader} />
-                <Typography className={classes.title} variant="h6" noWrap>
-                  Processing
-                </Typography>
-              </CardContent>}
+              {image ? (
+                <CardActionArea>
+                  <CardMedia
+                    className={classes.media}
+                    image={preview}
+                    component="img"
+                    title="Leaf Preview"
+                  />
+                </CardActionArea>
+              ) : (
+                <CardContent className={classes.content}>
+                  <DropzoneArea
+                    acceptedFiles={['image/*']}
+                    dropzoneText={"Drag and drop an image of a potato plant leaf to process"}
+                    onChange={onSelectFile}
+                  />
+                </CardContent>
+              )}
+
+              {data && (
+                <CardContent className={classes.detail}>
+                  <TableContainer component={Paper} className={classes.tableContainer}>
+                    <Table size="small" aria-label="prediction table">
+                      <TableHead>
+                        <TableRow>
+                          <TableCell><strong>Label</strong></TableCell>
+                          <TableCell align="right"><strong>Confidence</strong></TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        <TableRow>
+                          <TableCell>{data.class}</TableCell>
+                          <TableCell align="right">{confidence}%</TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </CardContent>
+              )}
+
+              {isLoading && (
+                <CardContent className={classes.detail}>
+                  <CircularProgress color="secondary" className={classes.loader} />
+                  <Typography className={classes.title} variant="h6" noWrap>
+                    Processing...
+                  </Typography>
+                </CardContent>
+              )}
             </Card>
           </Grid>
+
+          {/* ✅ Suggestion Box */}
+          {data?.class && (
+  <Grid item xs={12} md={4}>
+    <Card style={{ padding: 16, height: "100%" }}>
+      <Typography variant="h6" align="center" gutterBottom>
+        📝 Suggestion
+      </Typography>
+
+      {(() => {
+        const normalizedClass = data.class?.replace(/\s+/g, "_").toLowerCase();
+        const suggestion = diseaseSuggestions[normalizedClass];
+
+        if (!suggestion) {
+          return (
+            <Typography style={{ color: "gray", fontStyle: "italic" }}>
+              No suggestion available for this disease.
+            </Typography>
+          );
+        }
+
+        return (
+          <>
+            <Typography
+              style={{
+                color: normalizedClass === "healthy" ? "green" : "red",
+                fontWeight: "bold",
+                whiteSpace: "pre-wrap"
+              }}
+            >
+              {suggestion.message}
+            </Typography>
+
+            {suggestion.link && (
+              <div style={{ marginTop: 16, textAlign: "center" }}>
+                <a
+                  href={suggestion.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: "#3f51b5", fontWeight: "bold", textDecoration: "none" }}
+                >
+                  🔗 Learn more
+                </a>
+              </div>
+            )}
+          </>
+        );
+      })()}
+    </Card>
+  </Grid>
+)}
+
+          
+        
+
+
+         
+
+
+          
+
+         
+
+
+
           {data &&
             <Grid item className={classes.buttonGrid} >
 
@@ -285,4 +395,6 @@ export const ImageUpload = () => {
       </Container >
     </React.Fragment >
   );
+  console.log("Data State:", data);
+
 };
