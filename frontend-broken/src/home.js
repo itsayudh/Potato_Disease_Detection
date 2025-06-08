@@ -182,24 +182,22 @@ export const ImageUpload = () => {
   let confidence = 0;
 
   const sendFile = async () => {
-  if (image) {
-    let formData = new FormData();
-    formData.append("file", selectedFile);
-    console.log("Sending to backend:", process.env.REACT_APP_API_URL);
-    let res = await axios({
-      method: "post",
-      url: process.env.REACT_APP_API_URL,
-      data: formData,
-    });
-    if (res.status === 200) {
-      console.log("Backend Response:", res.data); 
-      setData(res.data);
-      fetchHistory();  //  Refresh the history after a successful prediction
+    if (image) {
+      let formData = new FormData();
+      formData.append("file", selectedFile);
+      console.log("Sending to backend:", process.env.REACT_APP_API_URL);
+      let res = await axios({
+        method: "post",
+        url: process.env.REACT_APP_API_URL,
+        data: formData,
+      });
+      if (res.status === 200) {
+        console.log("Backend Response:", res.data); 
+        setData(res.data);
+      }
+      setIsloading(false);
     }
-    setIsloading(false);
   }
-};
-
   
 
   const clearData = () => {
@@ -226,34 +224,6 @@ export const ImageUpload = () => {
     sendFile();
   }, [preview]);
 
-
-
-
-
-  const [historyOpen, setHistoryOpen] = useState(false);
-  const [history, setHistory] = useState([]);
-
-  const fetchHistory = async () => {
-    try {
-      const res = await axios.get("http://127.0.0.1:8888/history");
-      console.log(`Found ${res.data.length} history records.`);
-      setHistory(res.data.slice(0, 10)); // latest 10 entries
-    } catch (err) {
-      console.error("Failed to fetch history:", err);
-    }
-  };
-
-useEffect(() => {
-  fetchHistory();
-}, []);
-
-const toggleHistory = () => {
-  setHistoryOpen(!historyOpen);
-};
-
-
-
-
   const onSelectFile = (files) => {
     if (!files || files.length === 0) {
       setSelectedFile(undefined);
@@ -273,8 +243,7 @@ const toggleHistory = () => {
   return (
     <React.Fragment>
       <AppBar position="static" className={classes.appbar}>
-      <Toolbar style={{ display: "flex", justifyContent: "space-between" }}>
-      <div style={{ display: "flex", alignItems: "center" }}>
+      <Toolbar sx={{ justifyContent: 'center' }}>
         <img
           src={plogo}
           alt="Potato Logo"
@@ -283,22 +252,7 @@ const toggleHistory = () => {
         <Typography className={classes.title} variant="h6" noWrap>
           Potato Disease Classification
         </Typography>
-      </div>
-
-      <Button
-        variant="contained"
-        size="small"
-        onClick={toggleHistory}
-        style={{
-          backgroundColor: "#ffffff",
-          color: "#000000a6",
-          fontWeight: "bold",
-          textTransform: "none"
-        }}
-      >
-        {historyOpen ? "Hide History" : "Show History"}
-      </Button>
-    </Toolbar>
+      </Toolbar>
     </AppBar>
       <Container maxWidth={false} className={classes.mainContainer} disableGutters={true}>
         <Grid
@@ -309,50 +263,6 @@ const toggleHistory = () => {
           alignItems="center"
           spacing={2}
         >
-          {/* history show table */}
-
-          {historyOpen && (
-          <Grid item xs={12} md={4}>
-            <Card style={{ padding: 16, maxHeight: 500, overflowY: "auto" }}>
-              <Typography variant="h6" align="center" gutterBottom>
-                🕘 Prediction History
-              </Typography>
-
-              {history.length === 0 ? (
-                <Typography variant="body2" align="center">
-                  No history found.
-                </Typography>
-              ) : (
-                <TableContainer>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      
-                      <TableCell><strong>Label</strong></TableCell>
-                      <TableCell align="right"><strong>Confidence</strong></TableCell>
-                      <TableCell><strong>Timestamp</strong></TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {history.map((row, idx) => (
-                      <TableRow key={idx}>
-                       
-                        <TableCell>{row.prediction_class}</TableCell>
-                        <TableCell align="right">{(row.confidence * 100).toFixed(2)}%</TableCell>
-                        <TableCell>{new Date(row.timestamp).toLocaleString()}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-              )}
-            </Card>
-          </Grid>
-        )}
-
-
-
-
          
 
           {/* hello */}
